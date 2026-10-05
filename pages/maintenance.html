@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PropertyPro Zambia Ltd - Tenant Self-Service Portal
+  File: maintenance.html - client-maintenance - Maintenance Requests (ToR 8.7)
+  Senior Developer: Navigation Logic Fix - v3.2 (Future-Proof)
+  Date: 2026-10-05
+  
+  PURPOSE:
+    This is the CLIENT SIDE (tenant) dashboard, converted from Company
+    Dashboard admin per ToR 8.6. 100% styling and behavior preserved.
+
+  NAVIGATION FIX APPLIED (Senior Dev Debug):
+    - Sidebar destinations are resolved from the app root, so root and nested
+      pages navigate consistently.
+    - Layout.init(currentPage) is the single source of truth for active state.
+      currentPage must match NAV_CONFIG id (e.g. client-dashboard, client-lease).
+    - Sidebar items are real links generated from NAV_CONFIG. Page file paths
+      are app-root-relative, and each page loads assets relative to its folder.
+    - Side nav uses event delegation via bindNav() in client-common.js and
+      bindGlobalSidebarControls() in layout - so dynamically added nav items
+      (future pages) automatically work without rebinding.
+    - Custom pages can be registered via Layout.registerPage() and are saved
+      to localStorage (propertypro_client_custom_pages) - they merge into
+      NAV_CONFIG without errors, deduplicated by id.
+    - Missing file or invalid NAV_CONFIG entry now shows toast + console.warn
+      instead of crashing - portal remains usable.
+    - Active state: renderSidebar() compares currentPage === item.id to add
+      "active" class. Breadcrumb auto-generates from NAV_CONFIG section+label.
+
+  HOW TO ADD NEW PAGE (Future-Proof):
+    1. Create pages/reports.html with the same shell:
+       - Load shared assets with "../css/" and "../js/" paths
+       - Call Layout.init({currentPage: 'client-reports'}) on DOMContentLoaded
+    2. Add entry to NAV_CONFIG in client-layout.js:
+       { id: 'client-reports', section: 'Finance', label: 'My Reports',
+          file: 'pages/reports.html', icon: ICONS.billing, badge: 'New' }
+    3. Or at runtime: Layout.registerPage({...}) - auto saves to localStorage
+    4. Navigation will instantly work - no other changes needed. Side nav will
+       display new item, goToPage() will resolve path correctly, active state
+       and breadcrumb will auto-update.
+
+  DEBUGGING TIPS:
+    - Open DevTools console: "[Client Layout] Loaded - X pages" confirms NAV_CONFIG
+    - Check localStorage: propertypro_client_v1 (state), propertypro_client_sidebar_collapsed,
+      propertypro_client_custom_pages (future pages)
+    - If nav not working: check #app-sidebar exists, Layout.init called, currentPage matches NAV_CONFIG id
+    - Search Ctrl+K / Cmd+K uses globalSearchBackdrop - queries invoices, maintenance, notices
+    - Toast container #toastContainer shows errors without breaking UI
+
+  DEPENDENCIES:
+    - css/common.css: root vars, sidebar 280px→72px, card, table, pill, modal, toast
+    - css/layout.css: app shell, sidebar gradient #0B1E35, topbar 64px, overlay blur, responsive 1024/768/480
+    - css/dashboard.css: kpi-grid 5 cols, dash-hero, quick-grid, chart-area, path-draw animation
+    - css/enterprise.css: inbox-layout split-pane 380px + settings-layout 240px tabs
+    - css/client.css: tenant badges, pay-now-btn gradient #16A34A→#15803D, balance-card dark, ussd-card
+    - js/client-common.js: CLIENT_TENANT T-1042, mock data, state persistence, bindNav()
+    - js/client-layout.js: NAV_CONFIG (source of truth), goToPage(), renderSidebar/Topbar/Breadcrumb
+  ============================================================================
+-->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Maintenance Requests — PropertyPro Tenant Portal</title>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/enterprise.css" />
+  <link rel="stylesheet" href="../css/client.css" />
+  <link rel="stylesheet" href="../opera-insura/operations.css" />
+  <link rel="stylesheet" href="../css/investment.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR CONTAINER: Rendered by Layout.renderSidebar() in client-layout.js
+         Uses NAV_CONFIG to generate nav-items with data-page="{id}" 
+         Active class added when currentPage matches item.id -->
+    <div id="app-sidebar"></div>
+    <div class="main">
+      <!-- TOPBAR CONTAINER: Rendered by Layout.renderTopbar()
+         Contains hamburger #btnToggleSidebar (mobile), collapse #btnCollapseSidebar (desktop),
+         search #searchInput + kbd Ctrl K, notifications #btnNotif #notifPanel, avatar -->
+    <div id="app-topbar"></div>
+      <!-- BREADCRUMB CONTAINER: Rendered by Layout.renderBreadcrumb()
+         Auto-generates from NAV_CONFIG via autoBreadcrumbs(currentPage) 
+         Shows Home > Section > Current Page -->
+    <div id="app-breadcrumb"></div>
+      <div class="content">
+
+        <div class="enterprise-page ops-page">
+          <div class="page-head">
+            <div>
+              <h1>Maintenance Requests <span class="badge-new">ToR 8.7 • Reactive</span></h1>
+              <p>Log issues with photos, track SLA, and chat with facilities team. Converted from admin
+                operations-maintenance.</p>
+            </div>
+            <div class="page-actions"><button class="btn"
+                onclick="document.getElementById('newMntBackdrop').classList.add('open')">📷 Report with
+                Photo</button><button class="btn btn-primary"
+                onclick="document.getElementById('newMntBackdrop').classList.add('open')">+ New Request</button></div>
+          </div>
+          <div class="kpi-grid enterprise" id="mntKpiGrid"></div>
+          <div class="card">
+            <div class="card-head">
+              <h3>My Requests • <span id="mntCount">0</span></h3>
+              <div style="display:flex;gap:8px"><select id="mntFilter"
+                  style="height:32px;border:1px solid var(--border);border-radius:8px">
+                  <option value="">All Status</option>
+                  <option>Open</option>
+                  <option>In Progress</option>
+                  <option>Resolved</option>
+                </select><input id="mntSearch" placeholder="Search MNT-"
+                  style="height:32px;border:1px solid var(--border);border-radius:8px;padding:0 10px" /></div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div class="table-wrap">
+                <table id="mntTable">
+                  <thead>
+                    <tr>
+                      <th>Request ID</th>
+                      <th>Date</th>
+                      <th>Issue</th>
+                      <th>Category</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>SLA</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-backdrop" id="newMntBackdrop">
+          <div class="modal" style="width:min(560px,100%)">
+            <div class="modal-head">
+              <h3 style="margin:0">New Maintenance Request</h3><button class="btn btn-ghost"
+                onclick="document.getElementById('newMntBackdrop').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+              <div><label style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Issue Title
+                  *</label><input id="mntTitle"
+                  style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;margin-top:6px"
+                  placeholder="e.g. AC not cooling in sales area" /></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><label
+                    style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Category</label><select
+                    id="mntCategory"
+                    style="width:100%;height:36px;border:1px solid var(--border);border-radius:8px;margin-top:6px">
+                    <option>HVAC</option>
+                    <option>Electrical</option>
+                    <option>Plumbing</option>
+                    <option>Cleaning</option>
+                    <option>Security</option>
+                  </select></div>
+                <div><label
+                    style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Priority</label><select
+                    id="mntPriority"
+                    style="width:100%;height:36px;border:1px solid var(--border);border-radius:8px;margin-top:6px">
+                    <option>Medium</option>
+                    <option>High</option>
+                    <option>Low</option>
+                    <option>Critical</option>
+                  </select></div>
+              </div>
+              <div><label
+                  style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Description</label><textarea
+                  id="mntDesc"
+                  style="width:100%;min-height:90px;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px"
+                  placeholder="Describe issue..."></textarea></div>
+              <div
+                style="border:1px dashed var(--border);border-radius:10px;padding:20px;text-align:center;background:var(--surface-2)">
+                <div style="font-size:24px">📷</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:6px">Drag photos here or click to upload (max
+                  5)</div><button class="btn btn-sm" style="margin-top:8px">Choose Files</button>
+              </div>
+            </div>
+            <div class="modal-foot"
+              style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border)">
+              <button class="btn"
+                onclick="document.getElementById('newMntBackdrop').classList.remove('open')">Cancel</button><button
+                class="btn btn-primary" id="btnSubmitMnt">Submit Request</button></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-backdrop" id="globalSearchBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:10px;flex:1"><svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="#64748B" stroke-width="1.8">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg><input id="globalSearchInput" placeholder="Search my lease, invoices, maintenance..."
+            style="flex:1;border:0;outline:0;font-size:14px" autofocus /></div><button class="btn btn-ghost"
+          onclick="document.getElementById('globalSearchBackdrop').classList.remove('open')">Esc</button>
+      </div>
+      <div class="modal-body">
+        <div class="small muted" style="margin-bottom:8px">Try: L-2026-001, INV-, MNT-, Zambezi • Ctrl K</div>
+        <div id="globalSearchResults"></div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/client-common.js"></script>
+  <script src="../js/investment-common.js"></script>
+  <script src="../js/client-layout.js"></script>
+  <script src="../js/pages/client-maintenance.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => { Layout.init({ currentPage: 'client-maintenance' }); });</script>
+</body>
+
+</html>

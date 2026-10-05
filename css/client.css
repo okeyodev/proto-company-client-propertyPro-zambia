@@ -1,0 +1,103 @@
+
+/* ============================================================================
+ * PropertyPro Zambia Ltd - css/client.css - Senior Dev Fix v3.2
+ * PURPOSE: Tenant-specific additional styles - same design system but
+ *          tenant-branded badges, buttons, cards. No admin styles.
+ *
+ * FIX APPLIED: Only comments added - no visual changes.
+ *
+ * KEY CLASSES (for future tenant pages):
+ *   .client-hero-badge: inline-flex gap 6px bg #F0FDF4 border #BBF7D0 color #15803D
+ *                        radius 20px 11px 800 - used on dashboard hero
+ *   .tenant-id-pill: bg #EFF6FF border #BFDBFE color #1D4ED8 radius 20px 11px 700
+ *                    - tenant ID badge (T-1042)
+ *   .pay-now-btn: gradient 135deg #16A34A->#15803D white border 0 shadow green 22%
+ *                 hover brightness 1.05 translateY -1px - primary CTA
+ *   .balance-card: gradient #0B1E35->#122E52 color #E6EEF8 border #1C3A5F
+ *                  - dark card for outstanding balance KPI
+ *   .balance-card .kpi-label: color #7B92B2, .kpi-value: #F1F5F9
+ *   .ussd-card: bg #FFFBEB border #FDE68A - USSD info card *123#
+ *   .lease-doc: flex gap 10px padding 10px 12px border radius 8px bg white
+ *              hover border #BFDBFE bg #EFF6FF - document list item
+ *
+ * FUTURE-PROOF: New tenant pages can use .pay-now-btn for payments,
+ *               .balance-card for dark KPIs, .ussd-card for USSD info.
+ *
+ * DEBUGGING: Check .pay-now-btn gradient in Computed, .balance-card dark bg.
+ * ============================================================================
+ */
+
+/* Client Portal - Additional Tenant-specific styles - same design system */
+.client-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #15803D;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.tenant-id-pill {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pay-now-btn {
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
+  color: white;
+  border: 0;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, .22);
+}
+
+.pay-now-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #0B1E35 0%, #122E52 100%);
+  color: #E6EEF8;
+  border: 1px solid #1C3A5F;
+}
+
+.balance-card .kpi-label {
+  color: #7B92B2;
+}
+
+.balance-card .kpi-value {
+  color: #F1F5F9;
+}
+
+.balance-card .kpi-foot {
+  color: #7B92B2;
+}
+
+.ussd-card {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+
+.lease-doc {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #FFF;
+}
+
+.lease-doc:hover {
+  border-color: #BFDBFE;
+  background: #EFF6FF;
+}

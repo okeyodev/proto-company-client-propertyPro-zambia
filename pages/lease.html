@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PropertyPro Zambia Ltd - Tenant Self-Service Portal
+  File: lease.html - client-lease - My Lease (ToR 8.3)
+  Senior Developer: Navigation Logic Fix - v3.2 (Future-Proof)
+  Date: 2026-10-05
+  
+  PURPOSE:
+    This is the CLIENT SIDE (tenant) dashboard, converted from Company
+    Dashboard admin per ToR 8.6. 100% styling and behavior preserved.
+
+  NAVIGATION FIX APPLIED (Senior Dev Debug):
+    - Sidebar destinations are resolved from the app root, so root and nested
+      pages navigate consistently.
+    - Layout.init(currentPage) is the single source of truth for active state.
+      currentPage must match NAV_CONFIG id (e.g. client-dashboard, client-lease).
+    - Sidebar items are real links generated from NAV_CONFIG. Page file paths
+      are app-root-relative, and each page loads assets relative to its folder.
+    - Side nav uses event delegation via bindNav() in client-common.js and
+      bindGlobalSidebarControls() in layout - so dynamically added nav items
+      (future pages) automatically work without rebinding.
+    - Custom pages can be registered via Layout.registerPage() and are saved
+      to localStorage (propertypro_client_custom_pages) - they merge into
+      NAV_CONFIG without errors, deduplicated by id.
+    - Missing file or invalid NAV_CONFIG entry now shows toast + console.warn
+      instead of crashing - portal remains usable.
+    - Active state: renderSidebar() compares currentPage === item.id to add
+      "active" class. Breadcrumb auto-generates from NAV_CONFIG section+label.
+
+  HOW TO ADD NEW PAGE (Future-Proof):
+    1. Create pages/reports.html with the same shell:
+       - Load shared assets with "../css/" and "../js/" paths
+       - Call Layout.init({currentPage: 'client-reports'}) on DOMContentLoaded
+    2. Add entry to NAV_CONFIG in client-layout.js:
+       { id: 'client-reports', section: 'Finance', label: 'My Reports',
+          file: 'pages/reports.html', icon: ICONS.billing, badge: 'New' }
+    3. Or at runtime: Layout.registerPage({...}) - auto saves to localStorage
+    4. Navigation will instantly work - no other changes needed. Side nav will
+       display new item, goToPage() will resolve path correctly, active state
+       and breadcrumb will auto-update.
+
+  DEBUGGING TIPS:
+    - Open DevTools console: "[Client Layout] Loaded - X pages" confirms NAV_CONFIG
+    - Check localStorage: propertypro_client_v1 (state), propertypro_client_sidebar_collapsed,
+      propertypro_client_custom_pages (future pages)
+    - If nav not working: check #app-sidebar exists, Layout.init called, currentPage matches NAV_CONFIG id
+    - Search Ctrl+K / Cmd+K uses globalSearchBackdrop - queries invoices, maintenance, notices
+    - Toast container #toastContainer shows errors without breaking UI
+
+  DEPENDENCIES:
+    - css/common.css: root vars, sidebar 280px→72px, card, table, pill, modal, toast
+    - css/layout.css: app shell, sidebar gradient #0B1E35, topbar 64px, overlay blur, responsive 1024/768/480
+    - css/dashboard.css: kpi-grid 5 cols, dash-hero, quick-grid, chart-area, path-draw animation
+    - css/enterprise.css: inbox-layout split-pane 380px + settings-layout 240px tabs
+    - css/client.css: tenant badges, pay-now-btn gradient #16A34A→#15803D, balance-card dark, ussd-card
+    - js/client-common.js: CLIENT_TENANT T-1042, mock data, state persistence, bindNav()
+    - js/client-layout.js: NAV_CONFIG (source of truth), goToPage(), renderSidebar/Topbar/Breadcrumb
+  ============================================================================
+-->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Lease — PropertyPro Tenant Portal</title>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/enterprise.css" />
+  <link rel="stylesheet" href="../css/client.css" />
+  <link rel="stylesheet" href="../opera-insura/operations.css" />
+  <link rel="stylesheet" href="../css/investment.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR CONTAINER: Rendered by Layout.renderSidebar() in client-layout.js
+         Uses NAV_CONFIG to generate nav-items with data-page="{id}" 
+         Active class added when currentPage matches item.id -->
+    <div id="app-sidebar"></div>
+    <div class="main">
+      <!-- TOPBAR CONTAINER: Rendered by Layout.renderTopbar()
+         Contains hamburger #btnToggleSidebar (mobile), collapse #btnCollapseSidebar (desktop),
+         search #searchInput + kbd Ctrl K, notifications #btnNotif #notifPanel, avatar -->
+    <div id="app-topbar"></div>
+      <!-- BREADCRUMB CONTAINER: Rendered by Layout.renderBreadcrumb()
+         Auto-generates from NAV_CONFIG via autoBreadcrumbs(currentPage) 
+         Shows Home > Section > Current Page -->
+    <div id="app-breadcrumb"></div>
+      <div class="content">
+
+        <div class="enterprise-page ops-page">
+          <div class="page-head">
+            <div>
+              <h1>My Lease <span class="badge-new">L-2026-001 • Active</span></h1>
+              <p>Your current lease agreement for Zambezi Mall Unit 12. View terms, escalation, deposit, and documents.
+                ToR 8.3 converted for tenant view.</p>
+            </div>
+            <div class="page-actions"><button class="btn" onclick="window.print()">Print Lease</button><button
+                class="btn btn-primary" onclick="toast('Lease PDF downloading...','success')">Download
+                Agreement</button></div>
+          </div>
+          <div class="kpi-grid enterprise" id="leaseKpiGrid"></div>
+          <div class="section-split">
+            <div class="card">
+              <div class="card-head">
+                <h3>Lease Details</h3><span class="pill green">Active • 1.2y tenure</span>
+              </div>
+              <div class="card-body" id="leaseDetails"></div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <h3>Documents & Receipts</h3><button class="btn">Upload KYC</button>
+              </div>
+              <div class="card-body" id="leaseDocs"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <div class="card-head">
+              <h3>Rent Escalation & History</h3><span class="pill blue">7% annual • Next: Jan 2027</span>
+            </div>
+            <div class="card-body">
+              <div id="rentChart" class="chart-area" style="height:220px"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-backdrop" id="globalSearchBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:10px;flex:1"><svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="#64748B" stroke-width="1.8">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg><input id="globalSearchInput" placeholder="Search my lease, invoices, maintenance..."
+            style="flex:1;border:0;outline:0;font-size:14px" autofocus /></div><button class="btn btn-ghost"
+          onclick="document.getElementById('globalSearchBackdrop').classList.remove('open')">Esc</button>
+      </div>
+      <div class="modal-body">
+        <div class="small muted" style="margin-bottom:8px">Try: L-2026-001, INV-, MNT-, Zambezi • Ctrl K</div>
+        <div id="globalSearchResults"></div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/client-common.js"></script>
+  <script src="../js/investment-common.js"></script>
+  <script src="../js/client-layout.js"></script>
+  <script src="../js/pages/client-lease.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => { Layout.init({ currentPage: 'client-lease' }); });</script>
+</body>
+
+</html>

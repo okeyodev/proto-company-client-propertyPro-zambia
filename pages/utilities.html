@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PropertyPro Zambia Ltd - Tenant Self-Service Portal
+  File: utilities.html - client-utilities - Utilities & Meters (ToR 8.7/8.8)
+  Senior Developer: Navigation Logic Fix - v3.2 (Future-Proof)
+  Date: 2026-10-05
+  
+  PURPOSE:
+    This is the CLIENT SIDE (tenant) dashboard, converted from Company
+    Dashboard admin per ToR 8.6. 100% styling and behavior preserved.
+
+  NAVIGATION FIX APPLIED (Senior Dev Debug):
+    - Sidebar destinations are resolved from the app root, so root and nested
+      pages navigate consistently.
+    - Layout.init(currentPage) is the single source of truth for active state.
+      currentPage must match NAV_CONFIG id (e.g. client-dashboard, client-lease).
+    - Sidebar items are real links generated from NAV_CONFIG. Page file paths
+      are app-root-relative, and each page loads assets relative to its folder.
+    - Side nav uses event delegation via bindNav() in client-common.js and
+      bindGlobalSidebarControls() in layout - so dynamically added nav items
+      (future pages) automatically work without rebinding.
+    - Custom pages can be registered via Layout.registerPage() and are saved
+      to localStorage (propertypro_client_custom_pages) - they merge into
+      NAV_CONFIG without errors, deduplicated by id.
+    - Missing file or invalid NAV_CONFIG entry now shows toast + console.warn
+      instead of crashing - portal remains usable.
+    - Active state: renderSidebar() compares currentPage === item.id to add
+      "active" class. Breadcrumb auto-generates from NAV_CONFIG section+label.
+
+  HOW TO ADD NEW PAGE (Future-Proof):
+    1. Create pages/reports.html with the same shell:
+       - Load shared assets with "../css/" and "../js/" paths
+       - Call Layout.init({currentPage: 'client-reports'}) on DOMContentLoaded
+    2. Add entry to NAV_CONFIG in client-layout.js:
+       { id: 'client-reports', section: 'Finance', label: 'My Reports',
+          file: 'pages/reports.html', icon: ICONS.billing, badge: 'New' }
+    3. Or at runtime: Layout.registerPage({...}) - auto saves to localStorage
+    4. Navigation will instantly work - no other changes needed. Side nav will
+       display new item, goToPage() will resolve path correctly, active state
+       and breadcrumb will auto-update.
+
+  DEBUGGING TIPS:
+    - Open DevTools console: "[Client Layout] Loaded - X pages" confirms NAV_CONFIG
+    - Check localStorage: propertypro_client_v1 (state), propertypro_client_sidebar_collapsed,
+      propertypro_client_custom_pages (future pages)
+    - If nav not working: check #app-sidebar exists, Layout.init called, currentPage matches NAV_CONFIG id
+    - Search Ctrl+K / Cmd+K uses globalSearchBackdrop - queries invoices, maintenance, notices
+    - Toast container #toastContainer shows errors without breaking UI
+
+  DEPENDENCIES:
+    - css/common.css: root vars, sidebar 280px→72px, card, table, pill, modal, toast
+    - css/layout.css: app shell, sidebar gradient #0B1E35, topbar 64px, overlay blur, responsive 1024/768/480
+    - css/dashboard.css: kpi-grid 5 cols, dash-hero, quick-grid, chart-area, path-draw animation
+    - css/enterprise.css: inbox-layout split-pane 380px + settings-layout 240px tabs
+    - css/client.css: tenant badges, pay-now-btn gradient #16A34A→#15803D, balance-card dark, ussd-card
+    - js/client-common.js: CLIENT_TENANT T-1042, mock data, state persistence, bindNav()
+    - js/client-layout.js: NAV_CONFIG (source of truth), goToPage(), renderSidebar/Topbar/Breadcrumb
+  ============================================================================
+-->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Utilities & Meters — PropertyPro Tenant Portal</title>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/enterprise.css" />
+  <link rel="stylesheet" href="../css/client.css" />
+  <link rel="stylesheet" href="../opera-insura/operations.css" />
+  <link rel="stylesheet" href="../css/investment.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR CONTAINER: Rendered by Layout.renderSidebar() in client-layout.js
+         Uses NAV_CONFIG to generate nav-items with data-page="{id}" 
+         Active class added when currentPage matches item.id -->
+    <div id="app-sidebar"></div>
+    <div class="main">
+      <!-- TOPBAR CONTAINER: Rendered by Layout.renderTopbar()
+         Contains hamburger #btnToggleSidebar (mobile), collapse #btnCollapseSidebar (desktop),
+         search #searchInput + kbd Ctrl K, notifications #btnNotif #notifPanel, avatar -->
+    <div id="app-topbar"></div>
+      <!-- BREADCRUMB CONTAINER: Rendered by Layout.renderBreadcrumb()
+         Auto-generates from NAV_CONFIG via autoBreadcrumbs(currentPage) 
+         Shows Home > Section > Current Page -->
+    <div id="app-breadcrumb"></div>
+      <div class="content">
+
+        <div class="enterprise-page ops-page">
+          <div class="page-head">
+            <div>
+              <h1>Utilities & Meters <span class="badge-new">ToR 8.7 • Sub-metering</span></h1>
+              <p>Electricity and water consumption for Unit 12. Converted from operations utilities for tenant view.</p>
+            </div>
+            <div class="page-actions"><button class="btn" type="button" onclick="exportUtilityReadings()">Export
+                CSV</button><button class="btn btn-primary" type="button"
+                onclick="disputeUtilityReading()">Dispute Reading</button></div>
+          </div>
+          <div class="kpi-grid enterprise" id="utilKpiGrid"></div>
+          <div class="card">
+            <div class="card-head">
+              <h3>Meter Readings • Last 6 Months</h3><span class="pill blue">ELEC-0012 • WTR-0012</span>
+            </div>
+            <div class="card-body">
+              <div id="utilChart" class="chart-area" style="height:220px"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <div class="card-head">
+              <h3>Readings History</h3>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div class="table-wrap">
+                <table id="utilTable">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Meter</th>
+                      <th>Prev</th>
+                      <th>Current</th>
+                      <th>Consumption</th>
+                      <th>Rate</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-backdrop" id="globalSearchBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:10px;flex:1"><svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="#64748B" stroke-width="1.8">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg><input id="globalSearchInput" placeholder="Search my lease, invoices, maintenance..."
+            style="flex:1;border:0;outline:0;font-size:14px" autofocus /></div><button class="btn btn-ghost"
+          onclick="document.getElementById('globalSearchBackdrop').classList.remove('open')">Esc</button>
+      </div>
+      <div class="modal-body">
+        <div class="small muted" style="margin-bottom:8px">Try: L-2026-001, INV-, MNT-, Zambezi • Ctrl K</div>
+        <div id="globalSearchResults"></div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/client-common.js"></script>
+  <script src="../js/investment-common.js"></script>
+  <script src="../js/client-layout.js"></script>
+  <script>
+    (() => {
+      const monthlyUsage = [
+        { month: "2026-04", electricity: 602, water: 38 },
+        { month: "2026-05", electricity: 640, water: 36 },
+        { month: "2026-06", electricity: 618, water: 42 },
+        { month: "2026-07", electricity: 690, water: 41 },
+        { month: "2026-08", electricity: 675, water: 39 },
+        { month: "2026-09", electricity: 650, water: 40 }
+      ];
+      const money = (value) => window.formatCurrency(Number(value || 0));
+      const escape = (value) => window.escapeHtml(value);
+      let disputeBackdrop;
+
+      function getReadings() {
+        const saved = window.state.utilities || [];
+        return monthlyUsage.flatMap((month, index) => {
+          const [year, monthNumber] = month.month.split("-").map(Number);
+          const endDate = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10);
+          return [
+            ["Electricity", "ELEC-0012", month.electricity, 2.5],
+            ["Water", "WTR-0012", month.water, 15]
+          ].map(([type, meter, consumption, rate]) => {
+            const current = saved.find((item) => item.meter === meter && item.date === endDate);
+            const laterConsumption = monthlyUsage.slice(index + 1).reduce((sum, later) => sum + later[type === "Electricity" ? "electricity" : "water"], 0);
+            const reading = current ? Number(current.reading) : Number((type === "Electricity" ? 12450 : 820) - laterConsumption);
+            return current ? current : {
+              id: `UTL-${meter}-${month.month}`, property: "Zambezi Mall", unit: "12", type, meter,
+              reading, previous: reading - consumption, consumption, rate, amount: consumption * rate, date: endDate, status: "Billed"
+            };
+          });
+        }).sort((a, b) => b.date.localeCompare(a.date) || a.type.localeCompare(b.type));
+      }
+
+      function renderUtilities() {
+        const readings = getReadings();
+        const latest = readings.filter((reading) => reading.date === readings[0]?.date);
+        const electricity = latest.find((reading) => reading.type === "Electricity");
+        const water = latest.find((reading) => reading.type === "Water");
+        const total = latest.reduce((sum, reading) => sum + Number(reading.amount || 0), 0);
+        document.getElementById("utilKpiGrid").innerHTML = [
+          ["Latest consumption", `${Number(electricity?.consumption || 0).toLocaleString()} kWh · ${Number(water?.consumption || 0).toLocaleString()} m³`, "September 2026 electricity and water"],
+          ["Latest utility charges", money(total), "Billed for Unit 12"],
+          ["Active meters", "2", "ELEC-0012 · WTR-0012"]
+        ].map(([label, value, sub]) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-meta">${sub}</div></div>`).join("");
+        document.querySelector("#utilTable tbody").innerHTML = readings.map((reading) => `<tr>
+          <td>${escape(reading.date)}</td><td>${escape(reading.type)}</td><td><b>${escape(reading.meter)}</b></td>
+          <td>${Number(reading.previous).toLocaleString()}</td><td>${Number(reading.reading).toLocaleString()}</td>
+          <td>${Number(reading.consumption).toLocaleString()} ${reading.type === "Water" ? "m³" : "kWh"}</td>
+          <td>${money(reading.rate)}</td><td>${money(reading.amount)}</td>
+          <td><span class="pill green">${escape(reading.status)}</span></td></tr>`).join("");
+        const max = Math.max(...monthlyUsage.map((item) => item.electricity));
+        document.getElementById("utilChart").innerHTML = `<div style="display:grid;grid-template-columns:repeat(6,minmax(48px,1fr));gap:12px;height:100%;align-items:end">
+          ${monthlyUsage.map((month) => `<div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:6px">
+            <div style="width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;height:160px">
+              <span title="Electricity ${month.electricity} kWh" style="width:30%;height:${Math.max(8, month.electricity / max * 145)}px;background:#2563EB;border-radius:4px 4px 0 0"></span>
+              <span title="Water ${month.water} m³" style="width:30%;height:${Math.max(8, month.water / 50 * 145)}px;background:#14B8A6;border-radius:4px 4px 0 0"></span>
+            </div><b style="font-size:11px">${new Intl.DateTimeFormat("en-ZM", { month: "short", timeZone: "UTC" }).format(new Date(`${month.month}-01T00:00:00Z`))}</b>
+          </div>`).join("")}</div><div style="display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:11px;color:var(--muted)">
+          <span><i style="display:inline-block;width:9px;height:9px;background:#2563EB;border-radius:2px"></i> Electricity (kWh)</span>
+          <span><i style="display:inline-block;width:9px;height:9px;background:#14B8A6;border-radius:2px"></i> Water (m³)</span></div>`;
+      }
+
+      window.exportUtilityReadings = () => {
+        const rows = [["Date", "Type", "Meter", "Previous", "Current", "Consumption", "Rate", "Amount", "Status"]];
+        getReadings().forEach((reading) => rows.push([
+          reading.date, reading.type, reading.meter, reading.previous, reading.reading, reading.consumption, reading.rate, reading.amount, reading.status
+        ]));
+        const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        link.download = "propertypro-utility-readings.csv";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        toast("Utility reading CSV downloaded", "success");
+      };
+      window.disputeUtilityReading = () => {
+        if (!disputeBackdrop) {
+          disputeBackdrop = document.createElement("div");
+          disputeBackdrop.className = "modal-backdrop";
+          disputeBackdrop.id = "utilityDisputeBackdrop";
+          disputeBackdrop.innerHTML = `<section class="modal" role="dialog" aria-modal="true" aria-labelledby="utilityDisputeTitle" style="width:min(520px,95vw)">
+            <header class="modal-head"><h3 id="utilityDisputeTitle" style="margin:0">Dispute a meter reading</h3>
+              <button class="btn btn-ghost" type="button" data-dispute-close aria-label="Close dispute form">✕</button></header>
+            <form id="utilityDisputeForm"><div class="modal-body">
+              <label for="disputeMeter">Meter</label>
+              <select class="input" id="disputeMeter" style="width:100%;margin:6px 0 12px"><option>ELEC-0012</option><option>WTR-0012</option></select>
+              <label for="disputeReason">Reason for review</label>
+              <textarea class="input" id="disputeReason" rows="4" required maxlength="500" placeholder="Describe the reading or charge you would like us to check." style="width:100%;margin-top:6px"></textarea>
+            </div><footer class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border)">
+              <button class="btn" type="button" data-dispute-close>Cancel</button><button class="btn btn-primary" type="submit">Submit dispute</button>
+            </footer></form></section>`;
+          document.body.appendChild(disputeBackdrop);
+          disputeBackdrop.addEventListener("click", (event) => {
+            if (event.target === disputeBackdrop || event.target.closest("[data-dispute-close]")) disputeBackdrop.classList.remove("open");
+          });
+          document.getElementById("utilityDisputeForm").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const reason = document.getElementById("disputeReason").value.trim();
+            if (!reason) {
+              toast("Enter a reason to submit a reading dispute.", "error");
+              return;
+            }
+            const disputes = window.state.utilityDisputes || (window.state.utilityDisputes = []);
+            const reference = `DSP-${String(disputes.length + 1).padStart(3, "0")}`;
+            disputes.push({
+              id: reference, meter: document.getElementById("disputeMeter").value, reason,
+              date: new Date().toISOString().slice(0, 10), status: "Submitted"
+            });
+            window.saveState();
+            disputeBackdrop.classList.remove("open");
+            toast(`Reading dispute ${reference} submitted for review.`, "success");
+          });
+        }
+        disputeBackdrop.classList.add("open");
+        document.getElementById("disputeReason").focus();
+      };
+      document.addEventListener("DOMContentLoaded", renderUtilities);
+    })();
+  </script>
+  <script>document.addEventListener('DOMContentLoaded', () => { Layout.init({ currentPage: 'client-utilities' }); });</script>
+</body>
+
+</html>

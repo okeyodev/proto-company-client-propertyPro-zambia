@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Dashboard - PropertyPro Zambia</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/enterprise.css">
+<link rel="stylesheet" href="../css/client.css">
+<link rel="stylesheet" href="../css/investment.css">
+</head>
+<body>
+<div class="app">
+  <div id="app-sidebar"></div>
+  <div class="main">
+    <div id="app-topbar"></div>
+    <div id="app-breadcrumb"></div>
+    <div class="content">
+      <div class="inv-hero">
+        <div>
+          <h1>Risk Dashboard</h1>
+          <div class="sub">Concentration credit liquidity duration VaR currency counterparty property ALM</div>
+          <div class="inv-filters" id="filters"></div>
+        </div>
+        <div class="inv-actions" id="actions"></div>
+      </div>
+      <div id="pageRoot"></div>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="modal-backdrop" id="globalSearchBackdrop"><div class="modal" style="width:min(640px,95vw)"><div class="modal-head"><h3 style="margin:0">Search</h3><button class="btn btn-ghost" onclick="closeSearch()">✕</button></div><div class="modal-body"><input id="globalSearchInput" class="input" placeholder="Search properties, assets, deals..." style="width:100%"><div id="globalSearchResults" style="margin-top:12px"></div></div></div></div>
+<div class="modal-backdrop" id="detailBackdrop"><div class="modal" style="width:min(760px,95vw)"><div class="modal-head"><h3 style="margin:0" id="detailTitle">Detail</h3><button class="btn btn-ghost" onclick="closeDetail()">✕</button></div><div class="modal-body" id="detailBody"></div></div></div>
+<script src="../js/client-common.js"></script>
+<script src="../js/investment-common.js"></script>
+<script src="../js/client-layout.js"></script>
+<script src="../js/pages/investment-risk.js"></script>
+</body>
+</html>

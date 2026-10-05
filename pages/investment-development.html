@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Development Projects - PropertyPro Zambia</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/enterprise.css">
+<link rel="stylesheet" href="../css/client.css">
+<link rel="stylesheet" href="../css/investment.css">
+</head>
+<body>
+<div class="app">
+  <div id="app-sidebar"></div>
+  <div class="main">
+    <div id="app-topbar"></div>
+    <div id="app-breadcrumb"></div>
+    <div class="content">
+      <div class="inv-hero">
+        <div>
+          <h1>Development Projects</h1>
+          <div class="sub">Feasibility appraisal approval budget contractor progress defects</div>
+          <div class="inv-filters" id="filters"></div>
+        </div>
+        <div class="inv-actions" id="actions"></div>
+      </div>
+      <div id="pageRoot"></div>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="modal-backdrop" id="globalSearchBackdrop"><div class="modal" style="width:min(640px,95vw)"><div class="modal-head"><h3 style="margin:0">Search</h3><button class="btn btn-ghost" onclick="closeSearch()">✕</button></div><div class="modal-body"><input id="globalSearchInput" class="input" placeholder="Search properties, assets, deals..." style="width:100%"><div id="globalSearchResults" style="margin-top:12px"></div></div></div></div>
+<div class="modal-backdrop" id="detailBackdrop"><div class="modal" style="width:min(760px,95vw)"><div class="modal-head"><h3 style="margin:0" id="detailTitle">Detail</h3><button class="btn btn-ghost" onclick="closeDetail()">✕</button></div><div class="modal-body" id="detailBody"></div></div></div>
+<script src="../js/client-common.js"></script>
+<script src="../js/investment-common.js"></script>
+<script>
+  (() => {
+    const demoProjects = [
+      {
+        id: "DEV-002", name: "Lusaka Office Tower Extension", fundId: "ACCIDENT",
+        status: "Construction", budget: 68000000, spent: 27200000, progress: 40,
+        feasibility: { npv: 12400000, irr: 14.8 }, contractor: "BuildRight Zambia Ltd",
+        stage: "Approved → Construction → Completion → Property Asset → Investment Portfolio"
+      },
+      {
+        id: "DEV-003", name: "Mukuba Residential Estate Phase II", fundId: "ECIS",
+        status: "Appraisal", budget: 42500000, spent: 1850000, progress: 8,
+        feasibility: { npv: 6800000, irr: 17.2 }, contractor: "Tender in progress",
+        stage: "Feasibility → Investment Appraisal → Approval → Development → Property Asset"
+      }
+    ];
+
+    const seedDevelopmentProjects = () => {
+      const projects = window.state.developmentProjects || (window.state.developmentProjects = []);
+      if (!projects.some((project) => project.id === "DEV-001")) {
+        projects[0] = {
+          id: "DEV-001", name: "Kafue Industrial Park", fundId: "PENSION", status: "Feasibility",
+          budget: 120000000, spent: 5000000, progress: 15,
+          feasibility: { npv: 18000000, irr: 16.0 }, contractor: "TBD",
+          stage: "Feasibility → Appraisal → Approval → Development → Property Asset → Investment Portfolio"
+        };
+      } else {
+        projects.find((project) => project.id === "DEV-001").fundId = "PENSION";
+      }
+      demoProjects.forEach((project) => {
+        if (!projects.some((existing) => existing.id === project.id)) projects.push(project);
+      });
+      window.saveState();
+    };
+
+    window.investmentMock.developmentProjects = [
+      ...window.investmentMock.developmentProjects.filter((project) => project.id !== "DEV-002" && project.id !== "DEV-003"),
+      ...demoProjects
+    ];
+    function downloadProjects() {
+      const rows = [["Project ID", "Project", "Fund", "Status", "Budget (ZMW)", "Spent (ZMW)", "Progress", "NPV (ZMW)", "IRR (%)", "Contractor"]];
+      (window.state.developmentProjects || []).forEach((project) => rows.push([
+        project.id, project.name, project.fundId, project.status, project.budget, project.spent,
+        `${project.progress}%`, project.feasibility?.npv, project.feasibility?.irr, project.contractor
+      ]));
+      const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      link.download = "propertypro-development-projects.csv";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      toast("Development project report downloaded", "success");
+    }
+
+    function renderDevelopmentProjects() {
+      const escape = (value) => window.escapeHtml(value);
+      const format = (value) => window.formatCurrency(Number(value || 0));
+      const projects = window.state.developmentProjects || [];
+      document.getElementById("filters").innerHTML = `
+        <select class="inv-filter" id="developmentFundFilter" aria-label="Filter projects by fund">
+          <option value="">All Funds</option><option value="PENSION">Pension Fund</option>
+          <option value="ACCIDENT">Accident Fund</option><option value="ECIS">ECIS Fund</option>
+        </select>
+        <input class="inv-filter" id="developmentSearch" aria-label="Search development projects" placeholder="Search projects" style="min-width:200px">`;
+      document.getElementById("actions").innerHTML = `
+        <button class="btn" type="button" id="developmentExport">Export CSV</button>
+        <button class="btn pay-now-btn" type="button" id="developmentGenerate">Generate Report</button>`;
+      const matches = () => {
+        const fund = document.getElementById("developmentFundFilter").value;
+        const query = document.getElementById("developmentSearch").value.trim().toLowerCase();
+        return projects.filter((project) =>
+          (!fund || project.fundId === fund) &&
+          (!query || [project.id, project.name, project.status, project.contractor, project.stage, project.fundId]
+            .some((value) => String(value || "").toLowerCase().includes(query)))
+        );
+      };
+      const draw = () => {
+        const selected = matches();
+        document.getElementById("pageRoot").innerHTML = `<div class="card"><div class="card-head">
+          <h3>Development Projects • ${selected.length} ${selected.length === 1 ? "project" : "projects"}</h3>
+        </div><div class="card-body">${selected.length ? selected.map((project) => {
+          const spentPercent = project.budget ? Math.min(100, Math.round(project.spent / project.budget * 100)) : 0;
+          return `<article style="border:1px solid var(--border);border-radius:12px;padding:14px;background:#FFF;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div><b style="font-size:14px">${escape(project.name)} • ${escape(project.id)}</b>
+                <div style="font-size:12px;color:var(--muted)">Status: ${escape(project.status)} • Fund: ${escape(project.fundId)} • Budget ${format(project.budget)} • Spent ${format(project.spent)} • Progress ${Number(project.progress)}%</div>
+              </div><span class="pill blue">${escape(project.status)}</span>
+            </div>
+            <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+              <div class="mini-kpi"><div class="l">Feasibility NPV</div><div class="v">${format(project.feasibility?.npv)}</div></div>
+              <div class="mini-kpi"><div class="l">Feasibility IRR</div><div class="v">${Number(project.feasibility?.irr || 0)}%</div></div>
+              <div class="mini-kpi"><div class="l">Contractor</div><div class="v">${escape(project.contractor)}</div></div>
+              <div class="mini-kpi"><div class="l">Stage</div><div class="v" style="font-size:11px">${escape(project.stage)}</div></div>
+            </div>
+            <div style="margin-top:10px" class="chart-box">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted);white-space:nowrap">Budget used ${spentPercent}%</span>
+                <div style="flex:1;height:8px;background:#E2E8F0;border-radius:20px;overflow:hidden"><div style="width:${spentPercent}%;height:100%;background:#16A34A"></div></div>
+                <span style="font-size:12px;font-weight:700">${Number(project.progress)}% complete</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:8px">${escape(project.stage)}</div>
+            </div>
+          </article>`;
+        }).join("") : '<p style="text-align:center;padding:24px;color:var(--muted)">No projects match your filters.</p>'}
+        </div></div>`;
+      };
+      document.getElementById("developmentFundFilter").addEventListener("change", draw);
+      document.getElementById("developmentSearch").addEventListener("input", draw);
+      document.getElementById("developmentExport").addEventListener("click", downloadProjects);
+      document.getElementById("developmentGenerate").addEventListener("click", downloadProjects);
+      draw();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      seedDevelopmentProjects();
+      window.Layout?.init({ currentPage: "investment-development" });
+      renderDevelopmentProjects();
+    });
+  })();
+</script>
+<script src="../js/client-layout.js"></script>
+</body>
+</html>

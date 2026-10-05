@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Dashboard - PropertyPro Zambia</title>
+<link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/enterprise.css">
+<link rel="stylesheet" href="../css/client.css">
+<link rel="stylesheet" href="../css/investment.css">
+</head>
+<body>
+<div class="app">
+  <div id="app-sidebar"></div>
+  <div class="main">
+    <div id="app-topbar"></div>
+    <div id="app-breadcrumb"></div>
+    <div class="content">
+      <div class="inv-hero">
+        <div>
+          <h1>Investment Management</h1>
+          <div class="sub">Portfolio overview, allocation, performance, risk and investment activity. Workers' Compensation Fund Control Board - Integrated Property & Investment Platform.</div>
+          <div class="inv-filters">
+            <select class="inv-filter" id="filterFund"><option>All Funds</option><option>Pension Fund</option><option>Accident Fund</option></select>
+            <select class="inv-filter" id="filterPortfolio"><option>All Portfolios</option><option>Pension Main</option><option>Property Portfolio</option><option>Fixed Income</option><option>Equities</option></select>
+            <select class="inv-filter" id="filterAssetClass"><option>All Asset Classes</option><option>Fixed Income</option><option>Property</option><option>Listed Equities</option><option>CIS</option><option>Cash</option></select>
+            <select class="inv-filter" id="filterDate"><option>As at 30 Sep 2026</option><option>As at 31 Aug 2026</option><option>YTD</option></select>
+            <select class="inv-filter" id="filterCurrency"><option>ZMW</option><option>USD</option></select>
+          </div>
+        </div>
+        <div class="inv-actions">
+          <button class="btn" onclick="toast('Exporting portfolio valuation Excel...','info')">Export</button>
+          <button class="btn" onclick="toast('Generating Management Report...','info')">Generate Report</button>
+          <button class="btn pay-now-btn" onclick="goToPage('investment-board')">View Board Pack</button>
+        </div>
+      </div>
+
+      <div class="inv-kpi-grid" id="invKpiGrid"></div>
+      <div class="inv-kpi-grid secondary" id="invKpiGrid2"></div>
+
+      <div class="section-split">
+        <div class="alloc-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0;font-size:14px;font-weight:700">Asset Allocation vs Strategic Target</h3>
+            <button class="btn" style="height:28px;font-size:12px" onclick="goToPage('investment-allocation')">View Detail</button>
+          </div>
+          <div class="chart-box" id="allocationChart"></div>
+          <div id="allocationTable"></div>
+        </div>
+        <div class="alloc-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0;font-size:14px;font-weight:700">Property Portfolio - Investment Lens</h3>
+            <button class="btn" style="height:28px;font-size:12px" onclick="goToPage('investment-property')">Open</button>
+          </div>
+          <div id="propertyAlloc"></div>
+          <div class="chart-box" id="propertyChart" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <div class="section-split" style="margin-top:14px">
+        <div class="card">
+          <div class="card-head"><h3>Recent Investment Activity</h3></div>
+          <div class="card-body"><div id="activityFeed"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Deal Pipeline - 7 Stage</h3><button class="btn" style="height:28px;font-size:12px" onclick="goToPage('investment-deals')">Pipeline</button></div>
+          <div class="card-body"><div id="pipelineMini"></div></div>
+        </div>
+      </div>
+
+      <div class="section-split" style="margin-top:14px">
+        <div class="card">
+          <div class="card-head"><h3>Compliance & Risk Summary</h3><button class="btn" style="height:28px;font-size:12px" onclick="goToPage('investment-compliance')">Monitor</button></div>
+          <div class="card-body"><div id="complianceSummary"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Cash & Liquidity</h3><button class="btn" style="height:28px;font-size:12px" onclick="goToPage('investment-cash')">Cash</button></div>
+          <div class="card-body"><div id="cashSummary"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="modal-backdrop" id="globalSearchBackdrop"><div class="modal" style="width:min(640px,95vw)"><div class="modal-head"><h3 style="margin:0">Search</h3><button class="btn btn-ghost" onclick="closeSearch()">✕</button></div><div class="modal-body"><input id="globalSearchInput" class="input" placeholder="Search properties, assets, deals, breaches..." style="width:100%"><div id="globalSearchResults" style="margin-top:12px"></div></div></div></div>
+
+<script src="../js/client-common.js"></script>
+<script src="../js/investment-common.js"></script>
+<script src="../js/client-layout.js"></script>
+<script src="../js/pages/investment-dashboard.js"></script>
+</body>
+</html>

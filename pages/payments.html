@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PropertyPro Zambia Ltd - Tenant Self-Service Portal
+  File: payments.html - client-payments - Payments & Receipts (ToR 8.4.3)
+  Senior Developer: Navigation Logic Fix - v3.2 (Future-Proof)
+  Date: 2026-10-05
+  
+  PURPOSE:
+    This is the CLIENT SIDE (tenant) dashboard, converted from Company
+    Dashboard admin per ToR 8.6. 100% styling and behavior preserved.
+
+  NAVIGATION FIX APPLIED (Senior Dev Debug):
+    - Sidebar destinations are resolved from the app root, so root and nested
+      pages navigate consistently.
+    - Layout.init(currentPage) is the single source of truth for active state.
+      currentPage must match NAV_CONFIG id (e.g. client-dashboard, client-lease).
+    - Sidebar items are real links generated from NAV_CONFIG. Page file paths
+      are app-root-relative, and each page loads assets relative to its folder.
+    - Side nav uses event delegation via bindNav() in client-common.js and
+      bindGlobalSidebarControls() in layout - so dynamically added nav items
+      (future pages) automatically work without rebinding.
+    - Custom pages can be registered via Layout.registerPage() and are saved
+      to localStorage (propertypro_client_custom_pages) - they merge into
+      NAV_CONFIG without errors, deduplicated by id.
+    - Missing file or invalid NAV_CONFIG entry now shows toast + console.warn
+      instead of crashing - portal remains usable.
+    - Active state: renderSidebar() compares currentPage === item.id to add
+      "active" class. Breadcrumb auto-generates from NAV_CONFIG section+label.
+
+  HOW TO ADD NEW PAGE (Future-Proof):
+    1. Create pages/reports.html with the same shell:
+       - Load shared assets with "../css/" and "../js/" paths
+       - Call Layout.init({currentPage: 'client-reports'}) on DOMContentLoaded
+    2. Add entry to NAV_CONFIG in client-layout.js:
+       { id: 'client-reports', section: 'Finance', label: 'My Reports',
+          file: 'pages/reports.html', icon: ICONS.billing, badge: 'New' }
+    3. Or at runtime: Layout.registerPage({...}) - auto saves to localStorage
+    4. Navigation will instantly work - no other changes needed. Side nav will
+       display new item, goToPage() will resolve path correctly, active state
+       and breadcrumb will auto-update.
+
+  DEBUGGING TIPS:
+    - Open DevTools console: "[Client Layout] Loaded - X pages" confirms NAV_CONFIG
+    - Check localStorage: propertypro_client_v1 (state), propertypro_client_sidebar_collapsed,
+      propertypro_client_custom_pages (future pages)
+    - If nav not working: check #app-sidebar exists, Layout.init called, currentPage matches NAV_CONFIG id
+    - Search Ctrl+K / Cmd+K uses globalSearchBackdrop - queries invoices, maintenance, notices
+    - Toast container #toastContainer shows errors without breaking UI
+
+  DEPENDENCIES:
+    - css/common.css: root vars, sidebar 280px→72px, card, table, pill, modal, toast
+    - css/layout.css: app shell, sidebar gradient #0B1E35, topbar 64px, overlay blur, responsive 1024/768/480
+    - css/dashboard.css: kpi-grid 5 cols, dash-hero, quick-grid, chart-area, path-draw animation
+    - css/enterprise.css: inbox-layout split-pane 380px + settings-layout 240px tabs
+    - css/client.css: tenant badges, pay-now-btn gradient #16A34A→#15803D, balance-card dark, ussd-card
+    - js/client-common.js: CLIENT_TENANT T-1042, mock data, state persistence, bindNav()
+    - js/client-layout.js: NAV_CONFIG (source of truth), goToPage(), renderSidebar/Topbar/Breadcrumb
+  ============================================================================
+-->
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payments & Receipts — PropertyPro Tenant Portal</title>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/enterprise.css" />
+  <link rel="stylesheet" href="../css/client.css" />
+  <link rel="stylesheet" href="../opera-insura/operations.css" />
+  <link rel="stylesheet" href="../css/investment.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR CONTAINER: Rendered by Layout.renderSidebar() in client-layout.js
+         Uses NAV_CONFIG to generate nav-items with data-page="{id}" 
+         Active class added when currentPage matches item.id -->
+    <div id="app-sidebar"></div>
+    <div class="main">
+      <!-- TOPBAR CONTAINER: Rendered by Layout.renderTopbar()
+         Contains hamburger #btnToggleSidebar (mobile), collapse #btnCollapseSidebar (desktop),
+         search #searchInput + kbd Ctrl K, notifications #btnNotif #notifPanel, avatar -->
+    <div id="app-topbar"></div>
+      <!-- BREADCRUMB CONTAINER: Rendered by Layout.renderBreadcrumb()
+         Auto-generates from NAV_CONFIG via autoBreadcrumbs(currentPage) 
+         Shows Home > Section > Current Page -->
+    <div id="app-breadcrumb"></div>
+      <div class="content">
+
+        <div class="enterprise-page ops-page">
+          <div class="page-head">
+            <div>
+              <h1>Payments & Receipts <span class="badge-new">MoMo • Bank • ZRA</span></h1>
+              <p>Your payment history, ZRA-compliant receipts, and online payment. ToR 8.4.3 converted for tenant.</p>
+            </div>
+            <div class="page-actions"><button class="btn" onclick="toast('Receipts exported','success')">Export
+                Receipt CSV</button><button class="btn btn-primary pay-now-btn" onclick="openPayModal()">Make
+                Payment</button></div>
+          </div>
+          <div class="kpi-grid enterprise" id="payKpiGrid"></div>
+          <div class="section-split">
+            <div class="card">
+              <div class="card-head">
+                <h3>Pay Now • Instant</h3><span class="pill green">Airtel • MTN • Zamtel • Zanaco</span>
+              </div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div><label
+                      style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Amount</label><input
+                      id="quickPayAmount" value="85000"
+                      style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px;margin-top:6px" />
+                  </div>
+                  <div><label
+                      style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted)">Method</label><select
+                      id="quickPayMethod"
+                      style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;margin-top:6px">
+                      <option>Airtel Money</option>
+                      <option>MTN Money</option>
+                      <option>Zamtel Kwacha</option>
+                      <option>Zanaco Bank Transfer</option>
+                    </select></div>
+                </div><input placeholder="Mobile +260 ..."
+                  id="quickPayPhone"
+                  style="width:100%;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 12px"
+                  value="+260 97 1234567" /><button class="btn btn-primary pay-now-btn" id="quickPayButton" style="width:100%;height:42px"
+                  onclick="beginQuickPayment()">Pay ZMW 85,000 Now →</button>
+                <div
+                  style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:8px 10px;font-size:11px">
+                  No internet? Dial <b>*123*4*1# → 2. Pay Rent</b></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <h3>Payment History</h3><button class="btn" id="paymentMonthFilter" type="button">This Month</button>
+              </div>
+              <div class="card-body" style="padding:0">
+                <div class="table-wrap">
+                  <table id="payTable">
+                    <thead>
+                      <tr>
+                        <th>Receipt</th>
+                        <th>Date</th>
+                        <th>Invoice</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-backdrop" id="payModalBackdrop">
+          <div class="modal" style="width:min(480px,100%)">
+            <div class="modal-head">
+              <h3>Pay Rent</h3><button class="btn btn-ghost"
+                onclick="document.getElementById('payModalBackdrop').classList.remove('open')">✕</button>
+            </div>
+            <div class="modal-body">
+              <label for="modalPayAmount">Amount (ZMW)</label>
+              <input class="input" id="modalPayAmount" type="number" min="1" step="0.01" style="width:100%;margin:6px 0 12px">
+              <label for="modalPayMethod">Payment method</label>
+              <select class="input" id="modalPayMethod" style="width:100%;margin:6px 0 12px">
+                <option>Airtel Money</option><option>MTN Money</option><option>Zamtel Kwacha</option><option>Zanaco Bank Transfer</option>
+              </select>
+              <label for="modalPayPhone">Mobile number or bank reference</label>
+              <input class="input" id="modalPayPhone" value="+260 97 1234567" style="width:100%;margin-top:6px">
+            </div>
+            <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border)">
+              <button class="btn" type="button" onclick="closePayModal()">Cancel</button>
+              <button class="btn btn-primary pay-now-btn" type="button" onclick="submitModalPayment()">Continue</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="modal-backdrop" id="globalSearchBackdrop">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:10px;flex:1"><svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="#64748B" stroke-width="1.8">
+            <circle cx="11" cy="11" r="6" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg><input id="globalSearchInput" placeholder="Search my lease, invoices, maintenance..."
+            style="flex:1;border:0;outline:0;font-size:14px" autofocus /></div><button class="btn btn-ghost"
+          onclick="document.getElementById('globalSearchBackdrop').classList.remove('open')">Esc</button>
+      </div>
+      <div class="modal-body">
+        <div class="small muted" style="margin-bottom:8px">Try: L-2026-001, INV-, MNT-, Zambezi • Ctrl K</div>
+        <div id="globalSearchResults"></div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/client-common.js"></script>
+  <script src="../js/investment-common.js"></script>
+  <script src="../js/client-layout.js"></script>
+  <script>
+    (() => {
+      const escape = (value) => window.escapeHtml(value);
+      const money = (value) => window.formatCurrency(value);
+      const allPayments = () => window.state.payments || (window.state.payments = []);
+      let showCurrentMonth = true;
+
+      function downloadPayments() {
+        const rows = [["Receipt", "Date", "Invoice", "Method", "Reference", "Amount (ZMW)", "Status"]];
+        allPayments().forEach((payment) => rows.push([
+          payment.receipt || "Pending", payment.date, payment.invoiceId || "", payment.method,
+          payment.reference || "", payment.amount, payment.status
+        ]));
+        const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        link.download = "propertypro-payment-history.csv";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        toast("Payment history CSV downloaded", "success");
+      }
+
+      function renderPayments() {
+        const payments = allPayments();
+        const visible = showCurrentMonth
+          ? payments.filter((payment) => payment.date && payment.date.slice(0, 7) === new Date().toISOString().slice(0, 7))
+          : payments;
+        const confirmed = payments.filter((payment) => payment.status === "Confirmed");
+        const total = confirmed.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        document.getElementById("payKpiGrid").innerHTML = [
+          ["Confirmed payments", confirmed.length, "Receipts available"],
+          ["Total received", money(total), "Confirmed transactions"],
+          ["In progress", payments.filter((payment) => payment.status === "Processing" || payment.status === "Pending").length, "Awaiting provider confirmation"]
+        ].map(([label, value, sub]) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-meta">${sub}</div></div>`).join("");
+        document.getElementById("payTable").querySelector("tbody").innerHTML = visible.length
+          ? visible.slice().sort((a, b) => b.date.localeCompare(a.date)).map((payment) => `<tr>
+              <td><b>${escape(payment.receipt || payment.id)}</b></td><td>${escape(payment.date)}</td>
+              <td>${escape(payment.invoiceId || "Account payment")}</td><td>${escape(payment.method)}</td>
+              <td>${money(Number(payment.amount || 0))}</td><td><span class="pill ${payment.status === "Confirmed" ? "green" : "amber"}">${escape(payment.status)}</span></td>
+            </tr>`).join("")
+          : '<tr><td colspan="6" style="text-align:center;padding:22px;color:var(--muted)">No payments for this month.</td></tr>';
+        document.getElementById("paymentMonthFilter").textContent = showCurrentMonth ? "This Month" : "All Payments";
+      }
+
+      function recordPayment(amount, method, reference) {
+        const digits = reference.replace(/\D/g, "");
+        if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000) {
+          toast("Enter a payment amount greater than zero.", "error");
+          return false;
+        }
+        if (digits.length < 9 || digits.length > 12) {
+          toast("Enter a valid Zambian mobile number or bank reference.", "error");
+          return false;
+        }
+        const payments = allPayments();
+        const id = `PAY-${String(Math.max(0, ...payments.map((payment) => Number((payment.id || "").replace(/\D/g, "")) || 0)) + 1).padStart(3, "0")}`;
+        payments.push({
+          id, tenantId: window.CLIENT_TENANT.id, invoiceId: "INV-P001-001",
+          amount, method: method === "Zanaco Bank Transfer" ? method : `Mobile Money - ${method}`,
+          reference: `${method.split(" ")[0].toUpperCase()}-${Date.now()}`,
+          date: new Date().toISOString().slice(0, 10), status: "Pending", receipt: ""
+        });
+        window.saveState();
+        renderPayments();
+        toast("Payment request recorded. Check your phone or bank for confirmation.", "success");
+        return true;
+      }
+
+      window.beginQuickPayment = () => recordPayment(
+        Number(document.getElementById("quickPayAmount").value),
+        document.getElementById("quickPayMethod").value,
+        document.getElementById("quickPayPhone").value.trim()
+      );
+      window.openPayModal = () => {
+        document.getElementById("modalPayAmount").value = document.getElementById("quickPayAmount").value || "85000";
+        document.getElementById("payModalBackdrop").classList.add("open");
+        document.getElementById("modalPayAmount").focus();
+      };
+      window.closePayModal = () => document.getElementById("payModalBackdrop").classList.remove("open");
+      window.submitModalPayment = () => {
+        const saved = recordPayment(
+          Number(document.getElementById("modalPayAmount").value),
+          document.getElementById("modalPayMethod").value,
+          document.getElementById("modalPayPhone").value.trim()
+        );
+        if (saved) window.closePayModal();
+      };
+      document.addEventListener("DOMContentLoaded", () => {
+        const existing = allPayments();
+        if (!existing.some((payment) => payment.id === "PAY-003")) {
+          existing.push({
+            id: "PAY-003", tenantId: window.CLIENT_TENANT.id, invoiceId: "INV-P001-001",
+            amount: 25000, method: "Mobile Money - MTN Money", reference: "MTN-2026-1003",
+            date: "2026-10-03", status: "Processing", receipt: ""
+          });
+          window.saveState();
+        }
+        const exportButton = document.querySelector(".page-actions .btn:not(.pay-now-btn)");
+        exportButton.onclick = null;
+        exportButton.type = "button";
+        exportButton.addEventListener("click", downloadPayments);
+        document.getElementById("paymentMonthFilter").addEventListener("click", () => {
+          showCurrentMonth = !showCurrentMonth;
+          renderPayments();
+        });
+        document.getElementById("quickPayAmount").addEventListener("input", (event) => {
+          const amount = Number(event.target.value);
+          document.getElementById("quickPayButton").textContent = Number.isFinite(amount) && amount > 0
+            ? `Pay ${money(amount)} Now →`
+            : "Enter an amount to pay";
+        });
+        document.getElementById("quickPayAmount").dispatchEvent(new Event("input"));
+        renderPayments();
+      });
+    })();
+  </script>
+  <script>document.addEventListener('DOMContentLoaded', () => { Layout.init({ currentPage: 'client-payments' }); });</script>
+</body>
+
+</html>
