@@ -11,7 +11,7 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Risk Dashboard...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - Risk Dashboard','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-risk-dashboard.csv')">Export CSV</button>`;
   
       const risks = s.riskMetrics||[];
       root.innerHTML = `<div class="inv-kpi-grid"><div class="inv-kpi"><div class="inv-kpi-label">Concentration</div><div class="inv-kpi-value">Zanaco 22.5%</div><div class="inv-kpi-foot">Limit 20% • Medium</div></div><div class="inv-kpi"><div class="inv-kpi-label">Vacancy</div><div class="inv-kpi-value">15.2%</div><div class="inv-kpi-foot">Zambezi Mall • Low</div></div><div class="inv-kpi"><div class="inv-kpi-label">Liquidity</div><div class="inv-kpi-value">5.1%</div><div class="inv-kpi-foot">Min 2% • Low</div></div><div class="inv-kpi"><div class="inv-kpi-label">VaR</div><div class="inv-kpi-value">ZMW 12.5M</div><div class="inv-kpi-foot">95% 1-day</div></div></div>

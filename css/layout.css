@@ -78,7 +78,7 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 20px 24px;
+  padding: 18px 20px 40px;
 }
 
 /* Sidebar */
@@ -617,7 +617,7 @@
   }
 
   .content {
-    padding: 12px 12px 18px;
+    padding: 12px 12px calc(88px + env(safe-area-inset-bottom));
   }
 }
 
@@ -629,5 +629,61 @@
 
   #app-breadcrumb {
     padding: 10px 12px 0;
+  }
+
+  .content {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media print {
+  body,
+  .app,
+  .main,
+  .content {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    background: #FFF;
+  }
+
+  .app {
+    display: block;
+  }
+
+  .sidebar,
+  #app-sidebar,
+  #app-topbar,
+  #app-breadcrumb,
+  .page-actions,
+  .inv-actions,
+  .content button,
+  #actions,
+  #filters,
+  .toast-container,
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  .content {
+    padding: 0;
+  }
+
+  .page,
+  .page.active {
+    display: block !important;
+    animation: none;
+  }
+}
+
+@media(max-width:768px) {
+  .main > .content {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
+
+@media(max-width:480px) {
+  .main > .content {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 }

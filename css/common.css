@@ -619,6 +619,23 @@ a {
   .inv-actions > .btn {
     flex: 1 1 auto;
   }
+
+  .app .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app .table-wrap table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .app .table-wrap td .btn {
+    flex-shrink: 0;
+    max-width: none;
+    white-space: nowrap;
+  }
 }
 
 .card {

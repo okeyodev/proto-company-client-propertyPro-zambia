@@ -11,7 +11,7 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Audit Trail...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - Audit Trail','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-audit-trail.csv')">Export CSV</button>`;
   
       root.innerHTML = `<div class="card"><div class="card-head"><h3>Shared Audit Trail • Every important mutation creates audit event • Uses existing addAuditEvent() pattern</h3></div><div class="card-body table-wrap"><table><thead><tr><th>Date</th><th>Action</th><th>Entity Type</th><th>Entity ID</th><th>User</th><th>Detail</th></tr></thead><tbody>
         <tr><td>2026-10-05 10:30</td><td>Investment Created</td><td>Investment Asset</td><td>INV-PROP-001</td><td>Investment Officer</td><td>Zambezi Mall linked to P-001 • 86.4M • No duplicate</td></tr>

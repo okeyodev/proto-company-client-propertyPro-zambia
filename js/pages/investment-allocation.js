@@ -10,7 +10,7 @@ function renderAlloc(){
   const filters = document.getElementById("filters");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>Board Approved SAA 2026</option></select>`;
   const actions = document.getElementById("actions");
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('What-if analysis is analysis tool, does not execute transactions','info')">What-if Model</button><button class="btn pay-now-btn" onclick="goToPage('investment-board')">Board View</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="document.getElementById('whatifAmount')?.focus()">What-if Model</button><button class="btn pay-now-btn" type="button" onclick="goToPage('investment-board')">Board View</button>`;
   const total = s.investmentAssets.reduce((a,b)=>a+b.marketValue,0);
   const data = [
     {assetClass:"Fixed Income", value:s.investmentAssets.filter(a=>a.assetClass==="Fixed Income").reduce((a,b)=>a+b.marketValue,0), target:35, min:25, max:45},
@@ -42,7 +42,7 @@ function renderAlloc(){
     </div>
   `;
   const visual = document.getElementById("allocVisual");
-  visual.innerHTML = data.map(r=>`<div style="display:flex;align-items:center;gap:8px;margin:8px 0"><div style="width:120px;font-size:12px;font-weight:600">${r.assetClass}</div><div class="alloc-bar" style="flex:1"><i style="width:${r.alloc}%;background:#2563EB"></i><i style="width:2px;background:#000;margin-left:${r.target}%;position:relative"></i></div><div style="width:40px;font-size:12px">${r.alloc.toFixed(1)}%</div></div>`).join("") + `<div style="font-size:11px;color:var(--muted);margin-top:8px">Blue bar = current, black line = target</div>`;
+  visual.innerHTML = data.map(r=>`<div class="allocation-visual-row" style="display:flex;align-items:center;gap:8px;margin:8px 0"><div style="width:120px;font-size:12px;font-weight:600">${r.assetClass}</div><div class="alloc-bar" style="flex:1;min-width:0"><i style="width:${r.alloc}%;background:#2563EB"></i><i style="width:2px;background:#000;margin-left:${r.target}%;position:relative"></i></div><div style="width:40px;font-size:12px">${r.alloc.toFixed(1)}%</div></div>`).join("") + `<div style="font-size:11px;color:var(--muted);margin-top:8px">Blue bar = current, black line = target</div>`;
   window._allocData = data;
   window._total = total;
 }

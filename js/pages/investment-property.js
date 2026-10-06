@@ -20,16 +20,16 @@ function renderPropInvest(){
       <div class="inv-kpi"><div class="inv-kpi-label">Avg Yield</div><div class="inv-kpi-value">8.9%</div><div class="inv-kpi-foot">Net 6.8%</div></div>
       <div class="inv-kpi"><div class="inv-kpi-label">Avg Occupancy</div><div class="inv-kpi-value">88.8%</div><div class="inv-kpi-foot">Vacancy 11.2%</div></div>
     </div>
-    <div class="card"><div class="card-head"><h3>Property Investments • Every directly held property appears as investment asset • Same underlying asset, no duplicate creation</h3><span class="pill blue" id="count"></span></div><div class="card-body"><div id="propCards" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px"></div></div></div>
+    <div class="card"><div class="card-head"><h3>Property Investments • Every directly held property appears as investment asset • Same underlying asset, no duplicate creation</h3><span class="pill blue" id="count"></span></div><div class="card-body"><div id="propCards" class="property-investment-cards"></div></div></div>
   `;
   const cards = document.getElementById("propCards");
   function render(list){
     document.getElementById("count").textContent = list.length + " properties";
     cards.innerHTML = list.map(p=>{
       const linkedProp = s.properties.find(pr=>pr.id===p.propertyId);
-      return `<div style="border:1px solid var(--border);border-radius:12px;padding:14px;background:#FFF;box-shadow:var(--shadow-sm)">
-        <div style="display:flex;justify-content:space-between"><div><b style="font-size:14px">${p.name}</b><div style="font-size:11px;color:var(--muted)">${p.id} • Property ID ${p.propertyId} • ${p.subClass} • ${p.fundId}</div></div><span class="pill green">${p.status}</span></div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">
+      return `<div class="property-investment-card" style="border:1px solid var(--border);border-radius:12px;padding:14px;background:#FFF;box-shadow:var(--shadow-sm)">
+        <div class="property-investment-card-header" style="display:flex;justify-content:space-between"><div><b style="font-size:14px">${p.name}</b><div style="font-size:11px;color:var(--muted)">${p.id} • Property ID ${p.propertyId} • ${p.subClass} • ${p.fundId}</div></div><span class="pill green">${p.status}</span></div>
+        <div class="property-investment-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">
           <div class="mini-kpi"><div class="l">Market Value</div><div class="v">${formatCurrency(p.marketValue)}</div></div>
           <div class="mini-kpi"><div class="l">Acquisition Cost</div><div class="v">${formatCurrency(p.acquisitionCost)}</div></div>
           <div class="mini-kpi"><div class="l">Yield</div><div class="v">${p.yield}%</div></div>
@@ -40,7 +40,7 @@ function renderPropInvest(){
           <div class="mini-kpi"><div class="l">Ownership</div><div class="v">${p.ownership}%</div></div>
           <div class="mini-kpi"><div class="l">Size</div><div class="v">${p.size||''} m²</div></div>
         </div>
-        <div style="margin-top:12px;display:flex;gap:8px"><button class="btn" onclick="goToPage('property-investment-detail')">Open Investment Record</button><button class="btn pay-now-btn" onclick="openPropertyManagement('${p.propertyId}')">Open Property Management Record</button></div>
+        <div class="property-investment-actions" style="margin-top:12px;display:flex;gap:8px"><button class="btn" onclick="goToPage('property-investment-detail')">Open Investment Record</button><button class="btn pay-now-btn" onclick="openPropertyManagement('${p.propertyId}')">Open Property Management Record</button></div>
         <div style="margin-top:8px;font-size:11px;color:var(--muted)">Investment Asset ${p.id} ↔ Property ${p.propertyId} • Same underlying asset • ${linkedProp? linkedProp.name : ''}</div>
       </div>`;
     }).join("");

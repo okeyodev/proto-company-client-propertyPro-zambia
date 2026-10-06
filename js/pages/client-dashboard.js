@@ -52,9 +52,13 @@ function renderClientDashboard() {
   noticeCount.textContent = `${notices.length} active`;
 
   const chart = document.getElementById("paymentChart");
-  chart.innerHTML = `<div style="display:flex;align-items:end;gap:10px;height:170px;padding:10px">${(state.payments || []).slice(0, 6).reverse().map((payment) => {
+  const payments = (state.payments || []).slice(0, 6).reverse();
+  const maxPayment = Math.max(1, ...payments.map((payment) => Number(payment.amount) || 0));
+  chart.innerHTML = `<div class="payment-chart-bars">${payments.map((payment) => {
     const amount = Number(payment.amount) || 0;
-    return `<div title="${esc(payment.date)} • ${money(amount)}" style="flex:1;height:${Math.max(12, Math.round(amount / Math.max(...(state.payments || []).map((item) => Number(item.amount) || 1)) * 130))}px;background:var(--blue);border-radius:5px 5px 0 0"></div>`;
+    const date = String(payment.date || "");
+    const chartDate = date.length >= 10 ? date.slice(5, 10) : date;
+    return `<div class="payment-chart-column" title="${esc(date)} • ${money(amount)}"><div class="payment-chart-bar" style="height:${Math.max(8, Math.round(amount / maxPayment * 130))}px"></div><span class="payment-chart-date">${esc(chartDate)}</span></div>`;
   }).join("")}</div>`;
   document.getElementById("paymentStats").innerHTML = `<div><b>${(state.payments || []).length}</b><div class="small muted">Recorded payments</div></div><div><b>${money((state.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0))}</b><div class="small muted">Total paid</div></div>`;
 }

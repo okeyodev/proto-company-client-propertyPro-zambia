@@ -9,7 +9,7 @@ function renderAssets(){
   const filters = document.getElementById("filters");
   if(filters) filters.innerHTML = `<input class="inv-filter" id="searchAsset" placeholder="Search Asset ID, Name, Issuer"><select class="inv-filter" id="classFilter"><option>All Asset Classes</option><option>Property</option><option>Fixed Income</option><option>Listed Equities</option><option>Cash</option><option>CIS</option><option>Unlisted Equity</option></select><select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select>`;
   const actions = document.getElementById("actions");
-  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="toast('Asset register export is a demo action.','info')">Export Excel</button><button class="btn pay-now-btn" type="button" onclick="openAssetForm()">+ Register Asset</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-asset-register.csv')">Export CSV</button><button class="btn pay-now-btn" type="button" onclick="openAssetForm()">+ Register Asset</button>`;
   ensureAssetForm();
   const root = document.getElementById("pageRoot");
   root.innerHTML = `<div class="card"><div class="card-head"><h3>Investment Asset Register • Property links to Property Management via propertyId</h3><span class="pill blue" id="count"></span></div><div class="card-body table-wrap"><table><thead><tr><th>Asset ID</th><th>Asset Name</th><th>Asset Class</th><th>Fund</th><th>Portfolio</th><th>Counterparty/Property</th><th>Cost</th><th>Market/Fair Value</th><th>Income</th><th>Yield</th><th>Risk</th><th>Status</th><th>Last Valuation</th><th>Actions</th></tr></thead><tbody id="assetTable"></tbody></table></div></div>`;

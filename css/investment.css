@@ -318,11 +318,34 @@
   .pipeline { grid-template-columns: repeat(3, 1fr); }
 }
 @media(max-width:640px){
-  .inv-kpi-grid, .inv-kpi-grid.secondary { grid-template-columns: 1fr; }
+  .inv-kpi-grid, .inv-kpi-grid.secondary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pipeline { grid-template-columns: 1fr; }
   .alloc-row { grid-template-columns: 1fr; gap: 4px; }
   .alloc-row.header { display: none; }
   .sync-grid { grid-template-columns: 1fr; }
+  .inv-kpi { min-width: 0; padding: 14px 12px; }
+  .inv-kpi-value { overflow-wrap: anywhere; font-size: clamp(16px, 4.6vw, 20px); }
+  .board-grid { grid-template-columns: minmax(0, 1fr); }
+  .board-card { min-width: 0; padding: 12px; }
+  .board-stat { align-items: flex-start; gap: 10px; }
+  .board-stat > span { flex: 1 1 40%; min-width: 0; }
+  .board-stat > b { flex: 1 1 55%; min-width: 0; text-align: right; overflow-wrap: anywhere; }
+  .whatif-input { align-items: stretch; flex-wrap: wrap; }
+  .whatif-input label { flex: 1 0 100%; width: auto !important; }
+  .whatif-input input { flex: 1 1 130px; min-width: 0; width: auto; }
+  .whatif-input .btn { flex: 0 0 auto; }
+  .alloc-card { min-width: 0; padding: 12px; }
+  .allocation-visual-row {
+    display: grid !important;
+    grid-template-columns: minmax(82px, 1fr) minmax(0, 2fr) 38px;
+    gap: 6px !important;
+  }
+  .allocation-visual-row > div:first-child { width: auto !important; }
+  .allocation-visual-row > div:last-child { width: auto !important; }
+  .development-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .erp-mapping-grid, .erp-adapter-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .appraisal-cashflows { min-width: 0; overflow-x: auto; }
+  .appraisal-assumptions { min-width: 0; overflow-wrap: anywhere; }
 }
 
 /* Board View */
@@ -368,4 +391,111 @@
   border-radius: 8px;
   padding: 0 12px;
   width: 160px;
+}
+
+.board-pack-contents,
+.development-metrics,
+.erp-mapping-grid,
+.erp-adapter-grid {
+  min-width: 0;
+}
+
+.appraisal-assumptions,
+.appraisal-cashflows {
+  min-width: 0;
+}
+
+.appraisal-cashflows table {
+  min-width: 560px;
+}
+
+@media(max-width:640px) {
+  .property-investment-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .property-investment-card {
+    min-width: 0;
+    padding: 12px !important;
+  }
+
+  .property-investment-card-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .property-investment-card-header > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .property-investment-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .property-investment-metrics .mini-kpi {
+    min-width: 0;
+  }
+
+  .property-investment-metrics .mini-kpi .v {
+    overflow-wrap: anywhere;
+  }
+
+  .property-investment-actions {
+    flex-wrap: wrap;
+  }
+
+  .property-investment-actions > .btn {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
+
+@media(max-width:640px) {
+  .board-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board-stat {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .board-stat > span {
+    flex: 1 1 40%;
+    min-width: 0;
+  }
+
+  .board-stat > b {
+    flex: 1 1 55%;
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .board-pack-contents {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .development-metrics > * {
+    min-width: 0;
+  }
+
+  .development-metrics .mini-kpi .v {
+    overflow-wrap: anywhere;
+  }
+
+  #rentChart > div {
+    gap: 8px !important;
+    padding-right: 4px !important;
+    padding-left: 4px !important;
+  }
+
+  #rentChart > div > div {
+    min-width: 0;
+  }
 }

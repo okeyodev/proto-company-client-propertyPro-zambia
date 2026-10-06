@@ -881,6 +881,42 @@
   gap: 10px
 }
 
+.payment-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 190px;
+  padding: 12px 10px 6px;
+}
+
+.payment-chart-column {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+
+.payment-chart-bar {
+  width: 100%;
+  max-width: 48px;
+  min-height: 8px;
+  background: var(--blue);
+  border-radius: 5px 5px 0 0;
+}
+
+.payment-chart-date {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media(max-width:1024px) {
   .quick-grid {
     grid-template-columns: repeat(2, 1fr)
@@ -890,6 +926,70 @@
 @media(max-width:640px) {
   .quick-grid {
     grid-template-columns: 1fr
+  }
+}
+
+@media(max-width:640px) {
+  #clientKpiGrid.kpi-grid.primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #clientKpiGrid .kpi {
+    min-height: 96px;
+    padding: 16px 14px;
+  }
+
+  #clientKpiGrid .kpi-value {
+    font-size: clamp(17px, 4.8vw, 21px);
+    overflow-wrap: anywhere;
+  }
+
+  #paymentChart {
+    min-width: 0;
+  }
+
+  .payment-chart-bars {
+    min-width: 0;
+    height: 190px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 12px 8px 6px;
+  }
+
+  .payment-chart-column {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .payment-chart-bar {
+    width: 100%;
+    min-height: 8px;
+    max-width: 34px;
+    background: var(--blue);
+    border-radius: 5px 5px 0 0;
+  }
+
+  .payment-chart-date {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media(max-width:380px) {
+  #clientKpiGrid.kpi-grid.primary {
+    grid-template-columns: 1fr;
   }
 }
 

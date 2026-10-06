@@ -615,3 +615,42 @@
   global.handleSearchInput = global.handleSearchInputExtended;
 
 })(window);
+
+window.downloadCsvFile = function (filename, rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    window.toast("There is no data available to export.", "error");
+    return;
+  }
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.toast("CSV downloaded.", "success");
+};
+
+window.exportVisibleTable = function (filename) {
+  const table = document.querySelector(".table-wrap table");
+  if (!table) {
+    window.toast("There is no table available to export on this page.", "error");
+    return;
+  }
+  const excludedColumns = Array.from(table.rows[0]?.cells || [])
+    .reduce((indices, cell, index) => {
+      if (cell.innerText.trim().toLowerCase() === "actions") indices.push(index);
+      return indices;
+    }, []);
+  const rows = Array.from(table.rows, (row) =>
+    Array.from(row.cells, (cell, index) => excludedColumns.includes(index) ? null : cell.innerText.trim())
+      .filter((value) => value !== null)
+  );
+  window.downloadCsvFile(filename, rows);
+};
+
+window.printCurrentReport = function () {
+  window.print();
+};

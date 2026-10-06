@@ -11,7 +11,7 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Performance...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - Performance','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-performance.csv')">Export CSV</button><button class="btn pay-now-btn" type="button" onclick="render()">Refresh Performance</button>`;
   
       const perf = s.performanceMetrics;
       root.innerHTML = `<div class="inv-kpi-grid"><div class="inv-kpi"><div class="inv-kpi-label">TWRR</div><div class="inv-kpi-value">${perf.twrr}%</div><div class="inv-kpi-foot">Benchmark 9.5%</div></div><div class="inv-kpi green"><div class="inv-kpi-label">MWRR</div><div class="inv-kpi-value">${perf.mwrr}%</div></div><div class="inv-kpi"><div class="inv-kpi-label">YTD Return</div><div class="inv-kpi-value">${perf.ytdReturn}%</div></div><div class="inv-kpi"><div class="inv-kpi-label">Income Return</div><div class="inv-kpi-value">5.2%</div></div><div class="inv-kpi"><div class="inv-kpi-label">Capital Return</div><div class="inv-kpi-value">3.5%</div></div></div>

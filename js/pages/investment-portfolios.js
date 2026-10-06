@@ -8,9 +8,9 @@ function renderPortfolios(){
   if(!s.investmentPortfolios){ setTimeout(renderPortfolios,300); return; }
   const calc = window.InvestmentCalc;
   const filters = document.getElementById("filters");
-  if(filters) filters.innerHTML = `<input class="inv-filter" placeholder="Search portfolio" id="searchPort"><select class="inv-filter" id="fundFilter"><option>All Funds</option><option>Pension Fund</option><option>Accident Fund</option></select>`;
+  if(filters) filters.innerHTML = `<input class="inv-filter" placeholder="Search portfolio" id="searchPort"><select class="inv-filter" id="fundFilter"><option value="All Funds">All Funds</option><option value="PENSION">Pension Fund</option><option value="ACCIDENT">Accident Fund</option></select>`;
   const actions = document.getElementById("actions");
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting portfolios...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('New Portfolio - Workflow','info')">New Portfolio</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-portfolios.csv')">Export CSV</button><button class="btn pay-now-btn" type="button" onclick="createPortfolio()">New Portfolio</button>`;
   const root = document.getElementById("pageRoot");
   const total = s.investmentAssets.reduce((a,b)=>a+b.marketValue,0);
   root.innerHTML = `
@@ -24,18 +24,52 @@ function renderPortfolios(){
   `;
   const tbody = document.getElementById("portTable");
   const portfolios = s.investmentPortfolios;
+  const fundFilter = document.getElementById("fundFilter");
   function renderTable(list){
     tbody.innerHTML = list.map(p=>{
       const val = p.value || s.investmentAssets.filter(a=>a.portfolioId===p.id).reduce((a,b)=>a+b.marketValue,0);
       const alloc = calc.calculatePortfolioAllocation(val,total);
-      return `<tr><td><b>${p.id}</b></td><td>${p.name}</td><td>${p.fundId}</td><td><span class="pill blue">${p.type}</span></td><td><b>${formatCurrency(val)}</b></td><td>${alloc.toFixed(1)}%</td><td><span class="trend up">+8.7%</span></td><td><span class="pill green">Low</span></td><td><button class="btn" style="height:28px;font-size:12px" onclick="viewPort('${p.id}')">View → Asset Class → Asset → Property</button></td></tr>`;
+      return `<tr><td><b>${escapeHtml(p.id)}</b></td><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.fundId)}</td><td><span class="pill blue">${escapeHtml(p.type)}</span></td><td><b>${formatCurrency(val)}</b></td><td>${alloc.toFixed(1)}%</td><td><span class="trend up">+8.7%</span></td><td><span class="pill green">Low</span></td><td><button class="btn" style="height:28px;font-size:12px" onclick="viewPort('${escapeHtml(p.id)}')">View → Asset Class → Asset → Property</button></td></tr>`;
     }).join("");
   }
   renderTable(portfolios);
   const search = document.getElementById("searchPort");
-  if(search) search.addEventListener("input", e=>{
-    const q = e.target.value.toLowerCase();
-    renderTable(portfolios.filter(p=> p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)));
-  });
+  const applyFilters = () => {
+    const q = (search?.value || "").trim().toLowerCase();
+    const fund = fundFilter?.value || "All Funds";
+    renderTable(portfolios.filter((portfolio) =>
+      (fund === "All Funds" || portfolio.fundId === fund) &&
+      (!q || portfolio.name.toLowerCase().includes(q) || portfolio.id.toLowerCase().includes(q))
+    ));
+  };
+  search?.addEventListener("input", applyFilters);
+  fundFilter?.addEventListener("change", applyFilters);
 }
 function viewPort(id){ toast("Drilling: Portfolio "+id+" → Asset Class → Asset → Property Record (same underlying asset)","info"); goToPage("investment-asset-register"); }
+function createPortfolio() {
+  const name = window.prompt("Enter a name for the new portfolio:");
+  if (name === null) return;
+  const trimmedName = name.trim();
+  if (!trimmedName) {
+    toast("Enter a portfolio name to continue.", "error");
+    return;
+  }
+  const fundId = window.prompt("Enter the fund ID (PENSION or ACCIDENT):", "PENSION");
+  if (fundId === null) return;
+  const normalizedFund = fundId.trim().toUpperCase();
+  if (!["PENSION", "ACCIDENT"].includes(normalizedFund)) {
+    toast("Choose PENSION or ACCIDENT as the fund ID.", "error");
+    return;
+  }
+  const portfolio = {
+    id: `PORT-NEW-${Date.now()}`,
+    name: trimmedName,
+    fundId: normalizedFund,
+    type: "Sub-Portfolio",
+    value: 0,
+  };
+  window.state.investmentPortfolios.unshift(portfolio);
+  saveState();
+  renderPortfolios();
+  toast(`${trimmedName} portfolio created.`, "success");
+}

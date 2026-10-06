@@ -178,3 +178,23 @@ function renderDashboard(){
 }
 
 function goToPage(id){ if(window.goToPage) window.goToPage(id); }
+
+function exportInvestmentDashboard() {
+  const state = window.state;
+  const assets = state.investmentAssets || [];
+  const total = assets.reduce((sum, asset) => sum + Number(asset.marketValue || 0), 0);
+  const propertyValue = assets.filter((asset) => asset.assetClass === "Property")
+    .reduce((sum, asset) => sum + Number(asset.marketValue || 0), 0);
+  const performance = state.performanceMetrics || {};
+  window.downloadCsvFile("propertypro-investment-dashboard.csv", [
+    ["Metric", "Value"],
+    ["Total Portfolio Value", total],
+    ["Property Portfolio Value", propertyValue],
+    ["Total Income", performance.totalIncome || 82400000],
+    ["Portfolio Yield (%)", performance.portfolioYield || 9.2],
+    ["TWRR (%)", performance.twrr || 8.7],
+    ["MWRR (%)", performance.mwrr || 9.1],
+    ["Cash Position", performance.cashPosition || 94600000],
+    ["Compliance Breaches", performance.complianceBreaches || 2],
+  ]);
+}

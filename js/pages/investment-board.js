@@ -17,7 +17,7 @@ function renderBoard(){
   const filters = document.getElementById("filters");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>Board Pack Q3 2026</option></select><select class="inv-filter"><option>All Funds</option></select>`;
   const actions = document.getElementById("actions");
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Board Pack PDF...','info')">Export PDF</button><button class="btn pay-now-btn" onclick="toast('Board Pack Generated','success')">Generate Board Pack</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="printCurrentReport()">Export PDF</button><button class="btn pay-now-btn" type="button" onclick="printCurrentReport()">Print Board Pack</button>`;
   const root = document.getElementById("pageRoot");
   root.innerHTML = `
     <div class="inv-kpi-grid">
@@ -51,7 +51,7 @@ function renderBoard(){
       </div>
     </div>
     <div class="card" style="margin-top:14px"><div class="card-head"><h3>Board Pack Contents</h3></div><div class="card-body">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div class="board-pack-contents" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
         ${["Portfolio Valuation","Asset Allocation","Property Portfolio","NOI & Yield","Occupancy & Arrears","Investment Performance","Risk","Compliance","Cash & Liquidity"].map(n=>`<div style="padding:10px;border:1px solid var(--border);border-radius:8px;background:#F8FAFC"><b style="font-size:13px">${n}</b><div style="font-size:11px;color:var(--muted);margin-top:4px">Included in Board Pack • IAS 40 / IFRS 13</div></div>`).join("")}
       </div>
     </div></div>

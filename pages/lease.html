@@ -97,8 +97,8 @@
               <p>Your current lease agreement for Zambezi Mall Unit 12. View terms, escalation, deposit, and documents.
                 ToR 8.3 converted for tenant view.</p>
             </div>
-            <div class="page-actions"><button class="btn" onclick="window.print()">Print Lease</button><button
-                class="btn btn-primary" onclick="toast('Lease PDF downloading...','success')">Download
+            <div class="page-actions"><button class="btn" type="button" onclick="window.print()">Print Lease</button><button
+                class="btn btn-primary" type="button" onclick="downloadLeaseAgreement()">Download
                 Agreement</button></div>
           </div>
           <div class="kpi-grid enterprise" id="leaseKpiGrid"></div>
@@ -111,7 +111,7 @@
             </div>
             <div class="card">
               <div class="card-head">
-                <h3>Documents & Receipts</h3><button class="btn">Upload KYC</button>
+                <h3>Documents & Receipts</h3><button class="btn" type="button" onclick="uploadLeaseKyc()">Upload KYC</button>
               </div>
               <div class="card-body" id="leaseDocs"></div>
             </div>

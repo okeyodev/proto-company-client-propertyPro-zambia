@@ -11,7 +11,7 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting CIS...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - CIS','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-collective-investments.csv')">Export CSV</button>`;
   
       const cis = s.investmentAssets.filter(a=>a.assetClass==="Collective Investment Schemes");
       root.innerHTML = `<div class="card"><div class="card-head"><h3>CIS • Fund Manager Mandate NAV Units Management Fees Performance Fee Verification</h3></div><div class="card-body table-wrap"><table><thead><tr><th>Asset ID</th><th>Name</th><th>Fund Manager</th><th>Mandate</th><th>NAV</th><th>Units</th><th>Cost</th><th>Market Value</th><th>Mgmt Fee %</th><th>Performance</th><th>Yield</th></tr></thead><tbody>${cis.map(c=>`<tr><td><b>${c.id}</b></td><td>${c.name}</td><td>${c.fundManager}</td><td>${c.mandate}</td><td>${c.nav}</td><td>${c.units.toLocaleString()}</td><td>${formatCurrency(c.cost)}</td><td><b>${formatCurrency(c.marketValue)}</b></td><td>${c.managementFee}%</td><td style="color:#16A34A">+${c.performance}%</td><td>${c.yield}%</td></tr>`).join("")}</tbody></table></div></div>`;

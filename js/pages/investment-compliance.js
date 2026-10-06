@@ -11,7 +11,7 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Compliance Monitor...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - Compliance Monitor','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-compliance-breaches.csv')">Export CSV</button>`;
   
       const breaches = s.complianceBreaches||[];
       const rules = s.complianceRules||[];

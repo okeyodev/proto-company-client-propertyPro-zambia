@@ -11,10 +11,10 @@ function render(){
   const filters = document.getElementById("filters");
   const actions = document.getElementById("actions");
   if(filters) filters.innerHTML = `<select class="inv-filter"><option>All Funds</option><option>Pension Fund</option></select><input class="inv-filter" placeholder="Search" style="min-width:200px">`;
-  if(actions) actions.innerHTML = `<button class="btn" onclick="toast('Exporting Benchmarks...','info')">Export</button><button class="btn pay-now-btn" onclick="toast('Action - Benchmarks','success')">Generate</button>`;
+  if(actions) actions.innerHTML = `<button class="btn" type="button" onclick="exportVisibleTable('propertypro-benchmarks.csv')">Export CSV</button><button class="btn pay-now-btn" type="button" onclick="render()">Refresh Benchmarks</button>`;
   
       const bms = s.benchmarks||[];
-      root.innerHTML = `<div class="card"><div class="card-head"><h3>Benchmarks • Fund vs Benchmark</h3></div><div class="card-body table-wrap"><table><thead><tr><th>Benchmark</th><th>Type</th><th>Return</th><th>Portfolio Return</th><th>Excess</th></tr></thead><tbody>${bms.map(b=>`<tr><td><b>${b.name}</b></td><td>${b.type}</td><td>${b.return}%</td><td>${(b.return+ (Math.random()*2-0.5)).toFixed(1)}%</td><td style="color:#16A34A">+0.5%</td></tr>`).join("")}<tr><td><b>Overall Benchmark</b></td><td>Composite</td><td>9.5%</td><td>8.7%</td><td style="color:#DC2626">-0.8%</td></tr></tbody></table></div></div>`;
+      root.innerHTML = `<div class="card"><div class="card-head"><h3>Benchmarks • Fund vs Benchmark</h3></div><div class="card-body table-wrap"><table><thead><tr><th>Benchmark</th><th>Type</th><th>Return</th><th>Portfolio Return</th><th>Excess</th></tr></thead><tbody>${bms.map(b=>`<tr><td><b>${b.name}</b></td><td>${b.type}</td><td>${b.return}%</td><td>${(Number(b.return) + 0.8).toFixed(1)}%</td><td style="color:#16A34A">+0.8%</td></tr>`).join("")}<tr><td><b>Overall Benchmark</b></td><td>Composite</td><td>9.5%</td><td>8.7%</td><td style="color:#DC2626">-0.8%</td></tr></tbody></table></div></div>`;
     
 }
 function closeDetail(){ document.getElementById("detailBackdrop")?.classList.remove("open"); }

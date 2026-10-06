@@ -1094,6 +1094,37 @@
     grid-template-columns: 1fr;
   }
 
+  .settings-layout {
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+
+  .settings-tabs {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-tab {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .settings-content {
+    min-width: 0;
+    padding: 14px !important;
+  }
+
+  .settings-content [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .settings-content label {
+    min-width: 0;
+  }
+
   .notice-grid {
     grid-template-columns: 1fr;
   }
